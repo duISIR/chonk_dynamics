@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="chonk_dynamics" type="chonk_dynamics" name="chonk_dynamics" output="screen">
+  </node>
+
+</launch>
