@@ -6,6 +6,7 @@
 #include "pseudoinverse.hpp"
 #include "skew.hpp"
 #include "EVA.hpp"
+#include <fstream>
 
 void mySigintHandler(int sig)
 { ROS_INFO("Stop Towr Motion Generator"); ros::shutdown(); }
@@ -23,7 +24,13 @@ int main(int argc, char **argv)
   bool ok;
   Eigen::VectorXd v_temp(6);
   Eigen::VectorXd a_temp(6);
+  Eigen::VectorXd f_temp(6);
   Eigen::MatrixXd skew_motion_force(6,6);
+
+  /*####################################################################################################################*/
+  std::ofstream outputfiledwq;
+  outputfiledwq.open("/home/dwq/chonk/src/plotting/script/ft.txt", std::ofstream::trunc | std::ofstream::out);
+  /*####################################################################################################################*/
 
  
   while (ros::ok())
@@ -108,6 +115,11 @@ int main(int argc, char **argv)
                              skew_motion_force *  eva.G_I_ee_l_conventional * eva.G_v_ee_l_conventional +
                              eva.Gravity_ee_l_conventional;
 
+//    std::cout << "force sensor result: " << std::endl;
+//    std::cout << (eva.G_X_ee_r_conventional.inverse().transpose() * eva.sensor_X_ee_r_conventional.transpose() * eva.ft_sensor_r).transpose() << std::endl;
+//    std::cout << "Inertial force/torque result: " << std::endl;
+//    std::cout << eva.G_F_r_conventional.transpose() << std::endl;
+
     // calculate the deirvation between real sensor values and calculated operational-space forces
     eva.Delta_ft_ee_r = eva.G_X_ee_r_conventional.inverse().transpose() * eva.sensor_X_ee_r_conventional.transpose() * eva.ft_sensor_r - eva.G_F_r_conventional; //torque first and force second
     eva.Delta_ft_ee_l = eva.G_X_ee_l_conventional.inverse().transpose() * eva.sensor_X_ee_l_conventional.transpose() * eva.ft_sensor_l - eva.G_F_l_conventional; //torque first and force second
@@ -119,6 +131,17 @@ int main(int argc, char **argv)
     // publish message
     eva.sensor_pub_right.publish(eva.msg_DeltaFT_right);
     eva.sensor_pub_left.publish(eva.msg_DeltaFT_left);
+
+
+    f_temp = eva.G_X_ee_r_conventional.inverse().transpose() * eva.sensor_X_ee_r_conventional.transpose() * eva.ft_sensor_r;
+    outputfiledwq << ros::Time::now() << " "
+                  << f_temp[3] << " "
+                  << f_temp[4]<< " "
+                  << f_temp[5]<< " "
+                  << eva.G_F_r_conventional[3] << " "
+                  << eva.G_F_r_conventional[4] << " "
+                  << eva.G_F_r_conventional[5] << " "
+                  << std::endl;
 
     ros::spinOnce();
     loop_rate.sleep();

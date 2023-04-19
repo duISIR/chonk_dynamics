@@ -69,8 +69,8 @@ class EVA
     Eigen::MatrixXd Jac_ee_left;
   //  Eigen::MatrixXd G_T_JOINT5_left(4, 4);           G_T_JOINT5_left.setZero();
     // declare ee and ft position relationship variables
-  //  Eigen::Vector3d JOINT5_p_ee_right;       JOINT5_p_ee_right << -0.055, 0, -0.039-0.04-0.0333;
-  //  Eigen::Vector3d JOINT5_p_ee_left;        JOINT5_p_ee_left << -0.055, 0, -0.039-0.04-0.0333;
+  //  Eigen::Vector3d JOINT5_p_ee_right;       JOINT5_p_ee_right << -0.08, 0, -0.039-0.04-0.0333;
+  //  Eigen::Vector3d JOINT5_p_ee_left;        JOINT5_p_ee_left << -0.08, 0, -0.039-0.04-0.0333;
   //  Eigen::MatrixXd X_transform_right(6,6);  X_transform_right.setIdentity(6,6);
   //  Eigen::MatrixXd X_transform_left(6,6);   X_transform_left.setIdentity(6,6);
     // declare variables of mass matrix M, centripedal and coriolis force C and gravity force G
