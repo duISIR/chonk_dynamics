@@ -19,11 +19,13 @@ int main(int argc, char **argv)
   signal(SIGINT, mySigintHandler);
   ROS_INFO("Start chonk dynamics calculation");
   /* Define the publish rate. */
-  ros::Rate loop_rate(50); // Run the publishers in fixed rate.
+  ros::Rate loop_rate(100); // Run the publishers in fixed rate.
   EVA eva(nh);
   bool ok;
   Eigen::VectorXd v_temp(6);
-  Eigen::VectorXd a_temp(6);
+  Eigen::VectorXd a_box_temp(6);
+  Eigen::VectorXd a_temp_right(6);
+  Eigen::VectorXd a_temp_left(6);
   Eigen::VectorXd f_temp(6);
   Eigen::MatrixXd skew_motion_force(6,6);
 
@@ -97,8 +99,8 @@ int main(int argc, char **argv)
     skew_motion_force << se3::skew(eva.G_v_ee_r_conventional.head(3)),     se3::skew(eva.G_v_ee_r_conventional.tail(3)),
                          Eigen::Matrix3d::Zero(),                          se3::skew(eva.G_v_ee_r_conventional.head(3));
     ok = eva.kinDynComp.getFrameAcc("RARM_END_EFFECTOR_grasp", eva.base_acceleration, eva.dds, eva.G_acc_r_conventional);
-    a_temp << eva.G_acc_r_conventional.tail(3), eva.G_acc_r_conventional.head(3);
-    eva.G_F_r_conventional = eva.G_I_ee_r_conventional * a_temp +
+    a_temp_right << eva.G_acc_r_conventional.tail(3), eva.G_acc_r_conventional.head(3);
+    eva.G_F_r_conventional = eva.G_I_ee_r_conventional * a_temp_right +
                              skew_motion_force *  eva.G_I_ee_r_conventional * eva.G_v_ee_r_conventional +
                              eva.Gravity_ee_r_conventional;
 
@@ -110,38 +112,54 @@ int main(int argc, char **argv)
     skew_motion_force << se3::skew(eva.G_v_ee_l_conventional.head(3)),     se3::skew(eva.G_v_ee_l_conventional.tail(3)),
                          Eigen::Matrix3d::Zero(),                          se3::skew(eva.G_v_ee_l_conventional.head(3));
     ok = eva.kinDynComp.getFrameAcc("LARM_END_EFFECTOR_grasp", eva.base_acceleration, eva.dds, eva.G_acc_l_conventional);
-    a_temp << eva.G_acc_l_conventional.tail(3), eva.G_acc_l_conventional.head(3);
-    eva.G_F_l_conventional = eva.G_I_ee_l_conventional * a_temp +
+    a_temp_left << eva.G_acc_l_conventional.tail(3), eva.G_acc_l_conventional.head(3);
+    eva.G_F_l_conventional = eva.G_I_ee_l_conventional * a_temp_left +
                              skew_motion_force *  eva.G_I_ee_l_conventional * eva.G_v_ee_l_conventional +
                              eva.Gravity_ee_l_conventional;
+
+    // update message
+//    a_box_temp = 0.5*(a_temp_right + a_temp_left);
+//    eva.msg_acc_box.data = {a_box_temp[0], a_box_temp[1], a_box_temp[2], a_box_temp[3], a_box_temp[4], a_box_temp[5]};
+
 
 //    std::cout << "force sensor result: " << std::endl;
 //    std::cout << (eva.G_X_ee_r_conventional.inverse().transpose() * eva.sensor_X_ee_r_conventional.transpose() * eva.ft_sensor_r).transpose() << std::endl;
 //    std::cout << "Inertial force/torque result: " << std::endl;
 //    std::cout << eva.G_F_r_conventional.transpose() << std::endl;
 
+//    std::cout << "force sensor result: " << std::endl;
+//    std::cout << (eva.G_X_ee_l_conventional.inverse().transpose() * eva.sensor_X_ee_l_conventional.transpose() * eva.ft_sensor_l).transpose() << std::endl;
+//    std::cout << "Inertial force/torque result: " << std::endl;
+//    std::cout << eva.G_F_l_conventional.transpose() << std::endl;
+
     // calculate the deirvation between real sensor values and calculated operational-space forces
-    eva.Delta_ft_ee_r = eva.G_X_ee_r_conventional.inverse().transpose() * eva.sensor_X_ee_r_conventional.transpose() * eva.ft_sensor_r - eva.G_F_r_conventional; //torque first and force second
-    eva.Delta_ft_ee_l = eva.G_X_ee_l_conventional.inverse().transpose() * eva.sensor_X_ee_l_conventional.transpose() * eva.ft_sensor_l - eva.G_F_l_conventional; //torque first and force second
+    eva.ft_ee_r_actual = -eva.G_X_ee_r_conventional.inverse().transpose() * eva.sensor_X_ee_r_conventional.transpose() * eva.ft_sensor_r + eva.G_F_r_conventional; //torque first and force second
+    eva.ft_ee_l_actual = -eva.G_X_ee_l_conventional.inverse().transpose() * eva.sensor_X_ee_l_conventional.transpose() * eva.ft_sensor_l + eva.G_F_l_conventional; //torque first and force second
+
+//    std::cout << "Actual right result: " << std::endl;
+//    std::cout << eva.ft_ee_r_actual.transpose() << std::endl;
+//    std::cout << "Actual left result: " << std::endl;
+//    std::cout << eva.ft_ee_l_actual.transpose() << std::endl;
 
     // update message
-    eva.msg_DeltaFT_right.data = {eva.Delta_ft_ee_r[0], eva.Delta_ft_ee_r[1], eva.Delta_ft_ee_r[2], eva.Delta_ft_ee_r[3], eva.Delta_ft_ee_r[4], eva.Delta_ft_ee_r[5]};
-    eva.msg_DeltaFT_left.data = {eva.Delta_ft_ee_l[0], eva.Delta_ft_ee_l[1], eva.Delta_ft_ee_l[2], eva.Delta_ft_ee_l[3], eva.Delta_ft_ee_l[4], eva.Delta_ft_ee_l[5]};
+    eva.msg_actual_right.data = {eva.ft_ee_r_actual[0], eva.ft_ee_r_actual[1], eva.ft_ee_r_actual[2], eva.ft_ee_r_actual[3], eva.ft_ee_r_actual[4], eva.ft_ee_r_actual[5]};
+    eva.msg_actual_left.data = {eva.ft_ee_l_actual[0], eva.ft_ee_l_actual[1], eva.ft_ee_l_actual[2], eva.ft_ee_l_actual[3], eva.ft_ee_l_actual[4], eva.ft_ee_l_actual[5]};
 
     // publish message
-    eva.sensor_pub_right.publish(eva.msg_DeltaFT_right);
-    eva.sensor_pub_left.publish(eva.msg_DeltaFT_left);
+    eva.sensor_pub_right.publish(eva.msg_actual_right);
+    eva.sensor_pub_left.publish(eva.msg_actual_left);
+//    eva.acc_box_pub.publish(eva.msg_acc_box);
 
 
-    f_temp = eva.G_X_ee_r_conventional.inverse().transpose() * eva.sensor_X_ee_r_conventional.transpose() * eva.ft_sensor_r;
-    outputfiledwq << ros::Time::now() << " "
-                  << f_temp[3] << " "
-                  << f_temp[4]<< " "
-                  << f_temp[5]<< " "
-                  << eva.G_F_r_conventional[3] << " "
-                  << eva.G_F_r_conventional[4] << " "
-                  << eva.G_F_r_conventional[5] << " "
-                  << std::endl;
+
+//    outputfiledwq << ros::Time::now() << " "
+//                  << eva.ft_ee_r_actual[3] << " "
+//                  << eva.ft_ee_r_actual[4]<< " "
+//                  << eva.ft_ee_r_actual[5]<< " "
+//                  << eva.ft_ee_l_actual[3] << " "
+//                  << eva.ft_ee_l_actual[4]<< " "
+//                  << eva.ft_ee_l_actual[5]<< " "
+//                  << std::endl;
 
     ros::spinOnce();
     loop_rate.sleep();

@@ -37,6 +37,11 @@ class EVA
     // declare inertia publishers
     ros::Publisher sensor_pub_right;
     ros::Publisher sensor_pub_left;
+//    ros::Publisher acc_box_pub;
+    // define messages
+    std_msgs::Float64MultiArray msg_actual_right;
+    std_msgs::Float64MultiArray msg_actual_left;
+//    std_msgs::Float64MultiArray msg_acc_box;
     // define the urdf file used by idyntree, this urdf is generated from gazebo
   //  std::string URDF_FILE = "/home/dwq/chonk/src/chonk_pushing/urdf/chonk_gazebo_fixed_wheels_combinebody.urdf";
     std::string URDF_FILE;
@@ -121,11 +126,9 @@ class EVA
     Eigen::VectorXd ft_sensor_r;
     Eigen::VectorXd ft_sensor_l;
     // declare derivation between real sensor values and operational-space force
-    Eigen::VectorXd Delta_ft_ee_r;
-    Eigen::VectorXd Delta_ft_ee_l;
-    // define messages
-    std_msgs::Float64MultiArray msg_DeltaFT_right;
-    std_msgs::Float64MultiArray msg_DeltaFT_left;
+    Eigen::VectorXd ft_ee_r_actual;
+    Eigen::VectorXd ft_ee_l_actual;
+
 
     int i_callback;
 
@@ -162,12 +165,14 @@ class EVA
       joint_sub = nh.subscribe("/chonk/joint_states", 1, &EVA::read_joint_states_cb, this);
       joint_sub_base = nh.subscribe("/chonk/base_pose_ground_truth", 1, &EVA::read_base_states_cb, this);
       sensor_sub_right = nh.subscribe("/ft_right/raw/data", 1, &EVA::read_ft_sensor_right_data_cb, this);
-      sensor_sub_left = nh.subscribe("/ft_right/raw/data", 1, &EVA::read_ft_sensor_left_data_cb, this);
+      sensor_sub_left = nh.subscribe("/ft_left/raw/data", 1, &EVA::read_ft_sensor_left_data_cb, this);
       joint_acc_sub = nh.subscribe("/chonk/joint_acc_pub", 1, &EVA::read_joint_acc_cb, this);
 
       // declare inertia publishers
       sensor_pub_right = nh.advertise<std_msgs::Float64MultiArray>("/chonk/sensor_ft_right", 10);
       sensor_pub_left = nh.advertise<std_msgs::Float64MultiArray>("/chonk/sensor_ft_left", 10);
+
+//      acc_box_pub = nh.advertise<std_msgs::Float64MultiArray>("/chonk/acc_box", 10);
       // load model
       URDF_FILE = "/home/dwq/chonk/src/chonk_pushing/urdf/chonk_pushing.urdf";
       ok = mdlLoader.loadModelFromFile(URDF_FILE);
@@ -272,23 +277,29 @@ class EVA
 
       ft_sensor_r.setZero(6);
       ft_sensor_l.setZero(6);
-      Delta_ft_ee_r.setZero(6);
-      Delta_ft_ee_l.setZero(6);
+      ft_ee_r_actual.setZero(6);
+      ft_ee_l_actual.setZero(6);
 
 //      ok = kinDynComp.getFrameFreeFloatingJacobian("RARM_END_EFFECTOR_grasp_end", Jac_ee_right);
 //      ok = kinDynComp.getFrameFreeFloatingJacobian("LARM_END_EFFECTOR_grasp_end", Jac_ee_left);
 
-      msg_DeltaFT_right.layout.dim.push_back(std_msgs::MultiArrayDimension());
-      msg_DeltaFT_right.layout.dim[0].size = 6;
-      msg_DeltaFT_right.layout.dim[0].stride = 1;
-      msg_DeltaFT_right.layout.dim[0].label = "sensor_ft_right";
-      msg_DeltaFT_right.data.resize(6);
+      msg_actual_right.layout.dim.push_back(std_msgs::MultiArrayDimension());
+      msg_actual_right.layout.dim[0].size = 6;
+      msg_actual_right.layout.dim[0].stride = 1;
+      msg_actual_right.layout.dim[0].label = "sensor_ft_right";
+      msg_actual_right.data.resize(6);
 
-      msg_DeltaFT_left.layout.dim.push_back(std_msgs::MultiArrayDimension());
-      msg_DeltaFT_left.layout.dim[0].size = 6;
-      msg_DeltaFT_left.layout.dim[0].stride = 1;
-      msg_DeltaFT_left.layout.dim[0].label = "sensor_ft_left";
-      msg_DeltaFT_left.data.resize(6);
+      msg_actual_left.layout.dim.push_back(std_msgs::MultiArrayDimension());
+      msg_actual_left.layout.dim[0].size = 6;
+      msg_actual_left.layout.dim[0].stride = 1;
+      msg_actual_left.layout.dim[0].label = "sensor_ft_left";
+      msg_actual_left.data.resize(6);
+
+//      msg_acc_box.layout.dim.push_back(std_msgs::MultiArrayDimension());
+//      msg_acc_box.layout.dim[0].size = 6;
+//      msg_acc_box.layout.dim[0].stride = 1;
+//      msg_acc_box.layout.dim[0].label = "acc_box";
+//      msg_acc_box.data.resize(6);
 
       std::cout << kinDynComp.getDescriptionOfDegreesOfFreedom() << std::endl;
 
