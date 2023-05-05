@@ -136,18 +136,30 @@ int main(int argc, char **argv)
     eva.ft_ee_r_actual = -eva.G_X_ee_r_conventional.inverse().transpose() * eva.sensor_X_ee_r_conventional.transpose() * eva.ft_sensor_r + eva.G_F_r_conventional; //torque first and force second
     eva.ft_ee_l_actual = -eva.G_X_ee_l_conventional.inverse().transpose() * eva.sensor_X_ee_l_conventional.transpose() * eva.ft_sensor_l + eva.G_F_l_conventional; //torque first and force second
 
+    eva.ft_ee_local_r_actual = eva.G_X_ee_r_conventional.transpose() * eva.ft_ee_r_actual;
+    eva.ft_ee_local_l_actual = eva.G_X_ee_l_conventional.transpose() * eva.ft_ee_l_actual;
+
 //    std::cout << "Actual right result: " << std::endl;
 //    std::cout << eva.ft_ee_r_actual.transpose() << std::endl;
 //    std::cout << "Actual left result: " << std::endl;
 //    std::cout << eva.ft_ee_l_actual.transpose() << std::endl;
+//    std::cout << "Actual right local result: " << std::endl;
+//    std::cout << eva.ft_ee_local_r_actual.transpose() << std::endl;
+//    std::cout << "Actual left local result: " << std::endl;
+//    std::cout << eva.ft_ee_local_l_actual.transpose() << std::endl;
 
     // update message
     eva.msg_actual_right.data = {eva.ft_ee_r_actual[0], eva.ft_ee_r_actual[1], eva.ft_ee_r_actual[2], eva.ft_ee_r_actual[3], eva.ft_ee_r_actual[4], eva.ft_ee_r_actual[5]};
     eva.msg_actual_left.data = {eva.ft_ee_l_actual[0], eva.ft_ee_l_actual[1], eva.ft_ee_l_actual[2], eva.ft_ee_l_actual[3], eva.ft_ee_l_actual[4], eva.ft_ee_l_actual[5]};
 
+    eva.msg_actual_local_right.data = {eva.ft_ee_local_r_actual[0], eva.ft_ee_local_r_actual[1], eva.ft_ee_local_r_actual[2], eva.ft_ee_local_r_actual[3], eva.ft_ee_local_r_actual[4], eva.ft_ee_local_r_actual[5]};
+    eva.msg_actual_local_left.data = {eva.ft_ee_local_l_actual[0], eva.ft_ee_local_l_actual[1], eva.ft_ee_local_l_actual[2], eva.ft_ee_local_l_actual[3], eva.ft_ee_local_l_actual[4], eva.ft_ee_local_l_actual[5]};
+
     // publish message
     eva.sensor_pub_right.publish(eva.msg_actual_right);
     eva.sensor_pub_left.publish(eva.msg_actual_left);
+    eva.sensor_pub_local_right.publish(eva.msg_actual_local_right);
+    eva.sensor_pub_local_left.publish(eva.msg_actual_local_left);
 //    eva.acc_box_pub.publish(eva.msg_acc_box);
 
 

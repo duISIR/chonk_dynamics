@@ -37,10 +37,14 @@ class EVA
     // declare inertia publishers
     ros::Publisher sensor_pub_right;
     ros::Publisher sensor_pub_left;
+    ros::Publisher sensor_pub_local_right;
+    ros::Publisher sensor_pub_local_left;
 //    ros::Publisher acc_box_pub;
     // define messages
     std_msgs::Float64MultiArray msg_actual_right;
     std_msgs::Float64MultiArray msg_actual_left;
+    std_msgs::Float64MultiArray msg_actual_local_right;
+    std_msgs::Float64MultiArray msg_actual_local_left;
 //    std_msgs::Float64MultiArray msg_acc_box;
     // define the urdf file used by idyntree, this urdf is generated from gazebo
   //  std::string URDF_FILE = "/home/dwq/chonk/src/chonk_pushing/urdf/chonk_gazebo_fixed_wheels_combinebody.urdf";
@@ -128,6 +132,8 @@ class EVA
     // declare derivation between real sensor values and operational-space force
     Eigen::VectorXd ft_ee_r_actual;
     Eigen::VectorXd ft_ee_l_actual;
+    Eigen::VectorXd ft_ee_local_r_actual;
+    Eigen::VectorXd ft_ee_local_l_actual;
 
 
     int i_callback;
@@ -171,6 +177,9 @@ class EVA
       // declare inertia publishers
       sensor_pub_right = nh.advertise<std_msgs::Float64MultiArray>("/chonk/sensor_ft_right", 10);
       sensor_pub_left = nh.advertise<std_msgs::Float64MultiArray>("/chonk/sensor_ft_left", 10);
+
+      sensor_pub_local_right = nh.advertise<std_msgs::Float64MultiArray>("/chonk/sensor_ft_local_right", 10);
+      sensor_pub_local_left = nh.advertise<std_msgs::Float64MultiArray>("/chonk/sensor_ft_local_left", 10);
 
 //      acc_box_pub = nh.advertise<std_msgs::Float64MultiArray>("/chonk/acc_box", 10);
       // load model
@@ -228,7 +237,6 @@ class EVA
       Gravity_ee_r_conventional[5] = m_ee_r * gravity[2];
       G_F_r_conventional.setZero(6);
 
-
       m_ee_l = 0.3113;
       sensor_I_ee_l_conventional.resize(6,6);
       ixx=0.00064665, ixy=0, ixz=0.000297068, iyy=0.00082646, iyz=0, izz=0.000354023;
@@ -246,7 +254,6 @@ class EVA
       Gravity_ee_l_conventional.setZero(6);
       Gravity_ee_l_conventional[5] = m_ee_l * gravity[2];
       G_F_l_conventional.setZero(6);
-
 
       G_H_ee_r.setZero(4,4);
       G_H_ee_l.setZero(4,4);
@@ -294,6 +301,19 @@ class EVA
       msg_actual_left.layout.dim[0].stride = 1;
       msg_actual_left.layout.dim[0].label = "sensor_ft_left";
       msg_actual_left.data.resize(6);
+
+      msg_actual_local_right.layout.dim.push_back(std_msgs::MultiArrayDimension());
+      msg_actual_local_right.layout.dim[0].size = 6;
+      msg_actual_local_right.layout.dim[0].stride = 1;
+      msg_actual_local_right.layout.dim[0].label = "sensor_ft_local_right";
+      msg_actual_local_right.data.resize(6);
+
+      msg_actual_local_left.layout.dim.push_back(std_msgs::MultiArrayDimension());
+      msg_actual_local_left.layout.dim[0].size = 6;
+      msg_actual_local_left.layout.dim[0].stride = 1;
+      msg_actual_local_left.layout.dim[0].label = "sensor_ft_local_left";
+      msg_actual_local_left.data.resize(6);
+
 
 //      msg_acc_box.layout.dim.push_back(std_msgs::MultiArrayDimension());
 //      msg_acc_box.layout.dim[0].size = 6;
