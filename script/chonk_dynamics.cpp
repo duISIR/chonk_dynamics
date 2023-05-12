@@ -27,7 +27,7 @@ int main(int argc, char **argv)
   Eigen::VectorXd a_temp_right(6);
   Eigen::VectorXd a_temp_left(6);
   Eigen::VectorXd f_temp(6);
-  Eigen::MatrixXd skew_motion_force(6,6);
+  Eigen::MatrixXd skew_motion_force(6,6); 
 
   /*####################################################################################################################*/
   std::ofstream outputfiledwq;
