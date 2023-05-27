@@ -170,8 +170,10 @@ class EVA
       // declare joint subscriber
       joint_sub = nh.subscribe("/chonk/joint_states", 1, &EVA::read_joint_states_cb, this);
       joint_sub_base = nh.subscribe("/chonk/base_pose_ground_truth", 1, &EVA::read_base_states_cb, this);
-      sensor_sub_right = nh.subscribe("/ft_right/raw/data", 1, &EVA::read_ft_sensor_right_data_cb, this);
-      sensor_sub_left = nh.subscribe("/ft_left/raw/data", 1, &EVA::read_ft_sensor_left_data_cb, this);
+//      sensor_sub_right = nh.subscribe("/ft_right/raw/data", 1, &EVA::read_ft_sensor_right_data_cb, this);
+//      sensor_sub_left = nh.subscribe("/ft_left/raw/data", 1, &EVA::read_ft_sensor_left_data_cb, this);
+      sensor_sub_right = nh.subscribe("/chonk/RARM/netft_data", 1, &EVA::read_ft_sensor_right_data_cb, this);
+      sensor_sub_left = nh.subscribe("/chonk/LARM/netft_data", 1, &EVA::read_ft_sensor_left_data_cb, this);
       joint_acc_sub = nh.subscribe("/chonk/joint_acc_pub", 1, &EVA::read_joint_acc_cb, this);
 
       // declare inertia publishers

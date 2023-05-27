@@ -68,19 +68,21 @@ void EVA::read_base_states_cb(const nav_msgs::Odometry::ConstPtr& msg)
   base_linear_velocity_global << msg->twist.twist.linear.x, msg->twist.twist.linear.y, msg->twist.twist.linear.z;
   base_angular_velocity_local << msg->twist.twist.angular.x, msg->twist.twist.angular.y, msg->twist.twist.angular.z;
 
-  base_velocity << base_linear_velocity_global, rotation_base * base_angular_velocity_local;
+//  base_velocity << base_linear_velocity_global, rotation_base * base_angular_velocity_local;
+  base_velocity << base_linear_velocity_global, base_angular_velocity_local;
+
 }
 
 // right sensor callback
 void EVA::read_ft_sensor_right_data_cb(const geometry_msgs::WrenchStamped::ConstPtr& msg)
 {
-  ft_sensor_r << msg->wrench.torque.x, msg->wrench.torque.y, msg->wrench.torque.z, msg->wrench.force.x, msg->wrench.force.y, msg->wrench.force.z;
+  ft_sensor_r << msg->wrench.torque.x, msg->wrench.torque.y, msg->wrench.torque.z, msg->wrench.force.x, msg->wrench.force.y-1.9, msg->wrench.force.z;
 }
 
 // left sensor callback
 void EVA::read_ft_sensor_left_data_cb(const geometry_msgs::WrenchStamped::ConstPtr& msg)
 {
-  ft_sensor_l << msg->wrench.torque.x, msg->wrench.torque.y, msg->wrench.torque.z, msg->wrench.force.x, msg->wrench.force.y, msg->wrench.force.z;
+  ft_sensor_l << msg->wrench.torque.x, msg->wrench.torque.y, msg->wrench.torque.z, msg->wrench.force.x, msg->wrench.force.y+2.16, msg->wrench.force.z;
 }
 
 // right ee acceleration callback
